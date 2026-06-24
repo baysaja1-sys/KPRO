@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { FileBarChart2, TrendingUp, TrendingDown, Minus, Download, Calendar, Filter, Copy } from 'react-feather'; // Oh wait, I am using lucide-react not react-feather
 import { FileBarChart2 as FileBarChart2Icon, TrendingUp as TrendingUpIcon, TrendingDown as TrendingDownIcon, Minus as MinusIcon, Download as DownloadIcon, Calendar as CalendarIcon, Filter as FilterIcon, Copy as CopyIcon } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Cell } from 'recharts';
 import type { ExcelData } from '@/types';
