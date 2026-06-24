@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 15 15% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 15 15% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 15 15% 12%;
+    --primary: 20 90% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 25 60% 95%;
+    --secondary-foreground: 20 90% 40%;
+    --muted: 25 30% 95%;
+    --muted-foreground: 20 15% 46%;
+    --accent: 15 80% 92%;
+    --accent-foreground: 15 80% 35%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 20 20% 88%;
+    --input: 20 20% 88%;
+    --ring: 20 90% 52%;
+    --radius: 0.75rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 20 15% 26%;
+    --sidebar-primary: 20 90% 52%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 25 60% 95%;
+    --sidebar-accent-foreground: 20 90% 40%;
+    --sidebar-border: 20 20% 91%;
+    --sidebar-ring: 20 90% 52%;
+
+    /* Sunset custom palette */
+    --sunset-50:  30 100% 97%;
+    --sunset-100: 30 100% 92%;
+    --sunset-200: 25 95% 82%;
+    --sunset-300: 20 92% 70%;
+    --sunset-400: 15 90% 60%;
+    --sunset-500: 10 88% 52%;   /* core orange */
+    --sunset-600: 5  85% 44%;   /* deep orange-red */
+    --sunset-700: 0  80% 38%;   /* red */
+    --sunset-800: 0  75% 30%;
+    --sunset-900: 0  70% 22%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/80 backdrop-blur-md border border-orange-100/60 shadow-[0_8px_30px_rgba(234,88,12,0.06)];
+  }
+  .premium-shadow {
+    @apply shadow-[0_8px_30px_rgba(234,88,12,0.10)] hover:shadow-[0_12px_40px_rgba(234,88,12,0.16)] transition-shadow duration-300;
+  }
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-red-500;
+  }
+  .sunset-gradient {
+    @apply bg-gradient-to-r from-orange-500 via-red-400 to-rose-500;
+  }
+  .sunset-gradient-soft {
+    @apply bg-gradient-to-br from-orange-50 via-red-50 to-rose-50;
+  }
+  .bg-page {
+    background: linear-gradient(135deg, #fff7ed 0%, #fff1f2 50%, #ffffff 100%);
+  }
+}
