@@ -34,70 +34,83 @@ export function useExcelParser() {
     const reader = new FileReader();
 
     reader.onload = (e) => {
-      try {
-        const binaryStr = e.target?.result;
-        if (!binaryStr) {
-          setState({ data: null, isLoading: false, error: 'Failed to read file' });
-          return;
-        }
-
-        const workbook = XLSX.read(binaryStr, { type: 'binary' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-
-        const jsonData: (string | number | null)[][] = XLSX.utils.sheet_to_json(worksheet, {
-          header: 1,
-          defval: null,
-          raw: false,
-        });
-
-        if (jsonData.length === 0) {
-          setState({ data: null, isLoading: false, error: 'File is empty' });
-          return;
-        }
-
-        // Find first non-empty row as header
-        let headerRowIndex = 0;
-        while (headerRowIndex < jsonData.length) {
-          const row = jsonData[headerRowIndex];
-          if (row && row.some(cell => cell !== null && cell !== '')) {
-            break;
+      // Use setTimeout to yield the main thread, allowing the UI to render the loading state
+      setTimeout(() => {
+        try {
+          const binaryStr = e.target?.result;
+          if (!binaryStr) {
+            setState({ data: null, isLoading: false, error: 'Failed to read file' });
+            return;
           }
-          headerRowIndex++;
+
+          const workbook = XLSX.read(binaryStr, { type: 'binary' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+
+          const jsonData: (string | number | null)[][] = XLSX.utils.sheet_to_json(worksheet, {
+            header: 1,
+            defval: null,
+            raw: false,
+          });
+
+          if (jsonData.length === 0) {
+            setState({ data: null, isLoading: false, error: 'File is empty' });
+            return;
+          }
+
+          // Find first non-empty row as header
+          let headerRowIndex = 0;
+          while (headerRowIndex < jsonData.length) {
+            const row = jsonData[headerRowIndex];
+            if (row && row.some(cell => cell !== null && cell !== '')) {
+              break;
+            }
+            headerRowIndex++;
+          }
+
+          if (headerRowIndex >= jsonData.length) {
+            setState({ data: null, isLoading: false, error: 'No valid data found in file' });
+            return;
+          }
+
+          const headers = Array.from({ length: jsonData[headerRowIndex].length }, (_, i) => {
+            const h = jsonData[headerRowIndex][i];
+            if (h !== null && h !== undefined && h !== '') return String(h).trim();
+            return `Column ${i + 1}`;
+          });
+
+          // Optimize row filtering for performance
+          const rows = [];
+          for (let i = headerRowIndex + 1; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            let hasData = false;
+            for (let j = 0; j < row.length; j++) {
+              if (row[j] !== null && row[j] !== '') {
+                hasData = true;
+                break;
+              }
+            }
+            if (hasData) rows.push(row);
+          }
+
+          const excelData: ExcelData = {
+            headers,
+            rows,
+            fileName: file.name,
+            sheetName: firstSheetName,
+            totalRows: rows.length,
+            totalCols: headers.length,
+          };
+
+          setState({ data: excelData, isLoading: false, error: null });
+        } catch (err) {
+          setState({
+            data: null,
+            isLoading: false,
+            error: `Failed to parse file: ${err instanceof Error ? err.message : 'Unknown error'}`,
+          });
         }
-
-        if (headerRowIndex >= jsonData.length) {
-          setState({ data: null, isLoading: false, error: 'No valid data found in file' });
-          return;
-        }
-
-        const headers = Array.from({ length: jsonData[headerRowIndex].length }, (_, i) => {
-          const h = jsonData[headerRowIndex][i];
-          if (h !== null && h !== undefined && h !== '') return String(h).trim();
-          return `Column ${i + 1}`;
-        });
-
-        const rows = jsonData.slice(headerRowIndex + 1).filter(row =>
-          row.some(cell => cell !== null && cell !== '')
-        );
-
-        const excelData: ExcelData = {
-          headers,
-          rows,
-          fileName: file.name,
-          sheetName: firstSheetName,
-          totalRows: rows.length,
-          totalCols: headers.length,
-        };
-
-        setState({ data: excelData, isLoading: false, error: null });
-      } catch (err) {
-        setState({
-          data: null,
-          isLoading: false,
-          error: `Failed to parse file: ${err instanceof Error ? err.message : 'Unknown error'}`,
-        });
-      }
+      }, 100);
     };
 
     reader.onerror = () => {
