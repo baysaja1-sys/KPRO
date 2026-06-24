@@ -8,18 +8,51 @@ self.onmessage = async (e: MessageEvent) => {
     
     postMessage({ type: 'progress', message: 'Membaca file Excel...' });
 
-    // Read the workbook
-    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-    const firstSheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[firstSheetName];
+    let jsonData: (string | number | null)[][] = [];
+    let firstSheetName = 'Sheet1';
 
-    postMessage({ type: 'progress', message: 'Mengekstrak baris data...' });
+    try {
+      // Try parsing normally as Excel
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
 
-    const jsonData: (string | number | null)[][] = XLSX.utils.sheet_to_json(worksheet, {
-      header: 1,
-      defval: null,
-      raw: false,
-    });
+      postMessage({ type: 'progress', message: 'Mengekstrak baris data...' });
+      jsonData = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1,
+        defval: null,
+        raw: false,
+      });
+    } catch (err: any) {
+      if (err && err.message && err.message.includes('Invalid HTML')) {
+        postMessage({ type: 'progress', message: 'Membaca file HTML berukuran besar (format lama)...' });
+        
+        // Convert ArrayBuffer to string manually (faster for utf-8)
+        const decoder = new TextDecoder('utf-8');
+        const text = decoder.decode(arrayBuffer);
+        
+        postMessage({ type: 'progress', message: 'Mengekstrak baris data HTML...' });
+        const rowsText = text.split(/<tr[^>]*>/i);
+        
+        for (let i = 1; i < rowsText.length; i++) {
+          const rowText = rowsText[i];
+          const cellMatches = [...rowText.matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi)];
+          const rowData = cellMatches.map(m => {
+            let cellText = m[1].replace(/<[^>]+>/g, '').trim();
+            cellText = cellText.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ');
+            return cellText;
+          });
+          if (rowData.length > 0) {
+            jsonData.push(rowData);
+          }
+          if (i % 5000 === 0) {
+            postMessage({ type: 'progress', message: `Mengekstrak data... (${i} baris)` });
+          }
+        }
+      } else {
+        throw err;
+      }
+    }
 
     postMessage({ type: 'progress', message: `Mengekstrak ${jsonData.length} baris data...` });
 
