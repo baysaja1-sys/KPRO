@@ -13,6 +13,14 @@ self.onmessage = async (e: MessageEvent) => {
     const firstSheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[firstSheetName];
 
+    postMessage({ type: 'progress', message: 'Mengekstrak baris data...' });
+
+    const jsonData: (string | number | null)[][] = XLSX.utils.sheet_to_json(worksheet, {
+      header: 1,
+      defval: null,
+      raw: false,
+    });
+
     postMessage({ type: 'progress', message: `Mengekstrak ${jsonData.length} baris data...` });
 
     if (jsonData.length === 0) {
