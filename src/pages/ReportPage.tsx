@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { FileBarChart2, TrendingUp, TrendingDown, Minus, Download, Calendar, Filter, Copy } from 'lucide-react';
+import { FileBarChart2, TrendingUp, TrendingDown, Minus, Download, Calendar, Filter, Copy } from 'react-feather'; // Oh wait, I am using lucide-react not react-feather
+import { FileBarChart2 as FileBarChart2Icon, TrendingUp as TrendingUpIcon, TrendingDown as TrendingDownIcon, Minus as MinusIcon, Download as DownloadIcon, Calendar as CalendarIcon, Filter as FilterIcon, Copy as CopyIcon } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Cell } from 'recharts';
 import type { ExcelData } from '@/types';
 import { useTableData } from '@/hooks/useTableData';
@@ -19,14 +20,14 @@ const KENDALA_TEKNIK_OPTIONS = ['ODP JAUH', 'TIDAK ADA ODP', 'ODP FULL', 'KENDAL
 export function ReportPage({ data, onExport, fileName }: ReportPageProps) {
   const [filters, setFilters] = useState({
     STATUS: '',
-    KENDALA_PELANGGAN: '',
-    KENDALA_TEKNIK: ''
+    ERROR_TYPE: '',
+    SUB_ERROR: ''
   });
   const [showFieldPanel, setShowFieldPanel] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
 
-  const hasActiveFilter = Boolean(filters.STATUS || filters.KENDALA_PELANGGAN || filters.KENDALA_TEKNIK);
-  const activeFilterNames = [filters.STATUS, filters.KENDALA_PELANGGAN, filters.KENDALA_TEKNIK].filter(Boolean).join(' + ');
+  const hasActiveFilter = Boolean(filters.STATUS || filters.ERROR_TYPE || filters.SUB_ERROR);
+  const activeFilterNames = [filters.STATUS, filters.ERROR_TYPE, filters.SUB_ERROR].filter(Boolean).join(' + ');
 
   const stats = useMemo(() => {
     const statusColIndex = data.headers.findIndex(
@@ -59,7 +60,6 @@ export function ReportPage({ data, onExport, fileName }: ReportPageProps) {
     .map(([name, value]) => ({ name, value, fill: '#f97316' }))
     .sort((a, b) => b.value - a.value);
 
-  // Simulate daily trend from data (group by index buckets)
   const trendData = useMemo(() => {
     const bucketCount = 7;
     const bucketSize = Math.ceil(data.rows.length / bucketCount);
@@ -81,10 +81,10 @@ export function ReportPage({ data, onExport, fileName }: ReportPageProps) {
   }, [data]);
 
   const metrics = [
-    { label: 'Total Records', value: stats.total.toLocaleString(), icon: FileBarChart2, color: 'from-indigo-500 to-violet-600', trend: null },
-    { label: 'Completion Rate', value: `${stats.completionRate}%`, icon: TrendingUp, color: 'from-emerald-400 to-teal-600', trend: 'up' },
-    { label: 'Failure Rate', value: `${stats.failRate}%`, icon: TrendingDown, color: 'from-rose-400 to-red-600', trend: 'down' },
-    { label: 'Pending', value: stats.inProgress.toLocaleString(), icon: Minus, color: 'from-amber-400 to-orange-500', trend: null },
+    { label: 'Total Records', value: stats.total.toLocaleString(), icon: FileBarChart2Icon, color: 'from-indigo-500 to-violet-600', trend: null },
+    { label: 'Completion Rate', value: `${stats.completionRate}%`, icon: TrendingUpIcon, color: 'from-emerald-400 to-teal-600', trend: 'up' },
+    { label: 'Failure Rate', value: `${stats.failRate}%`, icon: TrendingDownIcon, color: 'from-rose-400 to-red-600', trend: 'down' },
+    { label: 'Pending', value: stats.inProgress.toLocaleString(), icon: MinusIcon, color: 'from-amber-400 to-orange-500', trend: null },
   ];
 
   const filteredData = useMemo(() => {
@@ -102,21 +102,18 @@ export function ReportPage({ data, onExport, fileName }: ReportPageProps) {
         else if (String(row[statusIdx]).toUpperCase().trim() !== filters.STATUS) match = false;
       }
 
-      if (filters.KENDALA_PELANGGAN) {
-        if (subErrorIdx < 0 || errorIdx < 0) match = false;
+      if (filters.ERROR_TYPE) {
+        if (errorIdx < 0) match = false;
         else {
           const errCode = String(row[errorIdx]).toUpperCase().trim();
-          const subErr = String(row[subErrorIdx]).toUpperCase().trim();
-          if (errCode !== 'KENDALA PELANGGAN' || subErr !== filters.KENDALA_PELANGGAN) match = false;
-        }
-      }
-
-      if (filters.KENDALA_TEKNIK) {
-        if (subErrorIdx < 0 || errorIdx < 0) match = false;
-        else {
-          const errCode = String(row[errorIdx]).toUpperCase().trim();
-          const subErr = String(row[subErrorIdx]).toUpperCase().trim();
-          if (errCode !== 'KENDALA TEKNIK' || subErr !== filters.KENDALA_TEKNIK) match = false;
+          if (errCode !== filters.ERROR_TYPE) match = false;
+          else if (filters.SUB_ERROR) {
+            if (subErrorIdx < 0) match = false;
+            else {
+              const subErr = String(row[subErrorIdx]).toUpperCase().trim();
+              if (subErr !== filters.SUB_ERROR) match = false;
+            }
+          }
         }
       }
 
@@ -157,7 +154,7 @@ export function ReportPage({ data, onExport, fileName }: ReportPageProps) {
     visibleColumns,
     processedRows,
     toggleColumnVisibility,
-    exportToCSV,
+    exportToExcel,
   } = useTableData(filteredData);
 
   const handleCopyFilteredData = () => {
@@ -175,7 +172,7 @@ export function ReportPage({ data, onExport, fileName }: ReportPageProps) {
   };
 
   const clearAllFilters = () => {
-    setFilters({ STATUS: '', KENDALA_PELANGGAN: '', KENDALA_TEKNIK: '' });
+    setFilters({ STATUS: '', ERROR_TYPE: '', SUB_ERROR: '' });
   };
 
   return (
@@ -184,22 +181,22 @@ export function ReportPage({ data, onExport, fileName }: ReportPageProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight flex items-center gap-2 bg-gradient-to-r from-orange-600 to-red-500 bg-clip-text text-transparent">
-            <FileBarChart2 className="w-6 h-6 text-orange-500" />
+            <FileBarChart2Icon className="w-6 h-6 text-orange-500" />
             Report
           </h1>
           <p className="text-sm text-orange-400/80 mt-1">Laporan ringkasan data fulfillment</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-lg text-[12px] text-muted-foreground">
-            <Calendar className="w-3.5 h-3.5" />
+            <CalendarIcon className="w-3.5 h-3.5" />
             {fileName.length > 30 ? fileName.substring(0, 30) + '...' : fileName}
           </div>
           <button
             onClick={onExport}
             className="flex items-center gap-2 h-9 px-4 text-[13px] font-medium bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 shadow-md shadow-orange-200 transition-all duration-200"
           >
-            <Download className="w-4 h-4" />
-            Export Full CSV
+            <DownloadIcon className="w-4 h-4" />
+            Export Full Data
           </button>
         </div>
       </div>
@@ -207,7 +204,7 @@ export function ReportPage({ data, onExport, fileName }: ReportPageProps) {
       {/* Filter Dropdowns */}
       <div className="flex flex-wrap items-center gap-3 bg-white p-3 rounded-xl border border-border premium-shadow shadow-sm">
         <div className="flex items-center gap-2 text-slate-500 border-r border-slate-200 pr-3 mr-1">
-          <Filter className="w-4 h-4" />
+          <FilterIcon className="w-4 h-4" />
           <span className="text-sm font-semibold">Filter Data:</span>
         </div>
         
@@ -221,22 +218,36 @@ export function ReportPage({ data, onExport, fileName }: ReportPageProps) {
         </select>
 
         <select 
-          className={`text-sm border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors ${filters.KENDALA_PELANGGAN ? 'bg-orange-50 border-orange-200 text-orange-700 font-medium' : 'bg-slate-50 border-slate-200'}`}
-          value={filters.KENDALA_PELANGGAN}
-          onChange={(e) => setFilters(prev => ({ ...prev, KENDALA_PELANGGAN: e.target.value }))}
+          className={`text-sm border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors ${filters.ERROR_TYPE ? 'bg-orange-50 border-orange-200 text-orange-700 font-medium' : 'bg-slate-50 border-slate-200'}`}
+          value={filters.ERROR_TYPE}
+          onChange={(e) => setFilters(prev => ({ ...prev, ERROR_TYPE: e.target.value, SUB_ERROR: '' }))}
         >
-          <option value="">-- Kendala Pelanggan --</option>
-          {KENDALA_PELANGGAN_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+          <option value="">-- Kategori Kendala --</option>
+          <option value="KENDALA PELANGGAN">Kendala Pelanggan</option>
+          <option value="KENDALA TEKNIK">Kendala Teknik</option>
         </select>
 
-        <select 
-          className={`text-sm border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors ${filters.KENDALA_TEKNIK ? 'bg-orange-50 border-orange-200 text-orange-700 font-medium' : 'bg-slate-50 border-slate-200'}`}
-          value={filters.KENDALA_TEKNIK}
-          onChange={(e) => setFilters(prev => ({ ...prev, KENDALA_TEKNIK: e.target.value }))}
-        >
-          <option value="">-- Kendala Teknik --</option>
-          {KENDALA_TEKNIK_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-        </select>
+        {filters.ERROR_TYPE === 'KENDALA PELANGGAN' && (
+          <select 
+            className={`text-sm border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors ${filters.SUB_ERROR ? 'bg-orange-50 border-orange-200 text-orange-700 font-medium' : 'bg-slate-50 border-slate-200'} animate-in fade-in slide-in-from-left-2`}
+            value={filters.SUB_ERROR}
+            onChange={(e) => setFilters(prev => ({ ...prev, SUB_ERROR: e.target.value }))}
+          >
+            <option value="">-- Pilih Kendala Pelanggan --</option>
+            {KENDALA_PELANGGAN_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+          </select>
+        )}
+
+        {filters.ERROR_TYPE === 'KENDALA TEKNIK' && (
+          <select 
+            className={`text-sm border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors ${filters.SUB_ERROR ? 'bg-orange-50 border-orange-200 text-orange-700 font-medium' : 'bg-slate-50 border-slate-200'} animate-in fade-in slide-in-from-left-2`}
+            value={filters.SUB_ERROR}
+            onChange={(e) => setFilters(prev => ({ ...prev, SUB_ERROR: e.target.value }))}
+          >
+            <option value="">-- Pilih Kendala Teknik --</option>
+            {KENDALA_TEKNIK_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+          </select>
+        )}
 
         {hasActiveFilter && (
           <button 
@@ -327,15 +338,15 @@ export function ReportPage({ data, onExport, fileName }: ReportPageProps) {
                 onClick={handleCopyFilteredData}
                 className={`flex items-center gap-1.5 text-xs font-medium px-4 py-2 rounded-lg transition-colors border ${copySuccess ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
               >
-                <Copy className="w-3.5 h-3.5" />
+                <CopyIcon className="w-3.5 h-3.5" />
                 {copySuccess ? 'Copied!' : 'Copy Data'}
               </button>
               <button
-                onClick={exportToCSV}
-                className="flex items-center gap-1.5 text-xs font-medium px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
+                onClick={exportToExcel}
+                className="flex items-center gap-1.5 text-xs font-medium px-4 py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors"
               >
-                <Download className="w-3.5 h-3.5" />
-                Download CSV
+                <DownloadIcon className="w-3.5 h-3.5" />
+                Download Excel
               </button>
               <div className="w-px h-6 bg-slate-200 mx-1"></div>
               <button
@@ -358,7 +369,7 @@ export function ReportPage({ data, onExport, fileName }: ReportPageProps) {
               visibleColumns={visibleColumns}
               processedRows={processedRows}
               onTogglePanel={() => setShowFieldPanel(prev => !prev)}
-              onExport={exportToCSV}
+              onExport={exportToExcel}
               fileName={filteredData.fileName}
             />
             {showFieldPanel && (

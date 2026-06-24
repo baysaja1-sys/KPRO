@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import * as XLSX from 'xlsx';
 import type { ExcelData, SortConfig, ColumnConfig } from '@/types';
 
 export function useTableData(data: ExcelData | null) {
@@ -117,31 +118,25 @@ export function useTableData(data: ExcelData | null) {
     setExpandedRow(prev => prev === index ? null : index);
   }, []);
 
-  const exportToCSV = useCallback(() => {
+  const exportToExcel = useCallback(() => {
     if (!data) return;
 
     const visibleHeaders = visibleColumns.map(col => col.name);
-    const csvRows = [visibleHeaders.join(',')];
+    
+    // Create worksheet data: array of arrays where first array is headers
+    const wsData: any[][] = [visibleHeaders];
 
     processedRows.forEach(({ row }) => {
-      const values = visibleColumns.map(col => {
-        const val = row[col.index];
-        if (val === null || val === '') return '';
-        const str = String(val);
-        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-          return `"${str.replace(/"/g, '""')}"`;
-        }
-        return str;
-      });
-      csvRows.push(values.join(','));
+      const values = visibleColumns.map(col => row[col.index]);
+      wsData.push(values);
     });
 
-    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = data.fileName.replace(/\.[^.]+$/, '') + '_filtered.csv';
-    link.click();
-    URL.revokeObjectURL(link.href);
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Data");
+
+    const fileName = data.fileName.replace(/\.[^.]+$/, '') + '_filtered.xlsx';
+    XLSX.writeFile(wb, fileName);
   }, [data, visibleColumns, processedRows]);
 
   return {
@@ -157,6 +152,6 @@ export function useTableData(data: ExcelData | null) {
     visibleColumns,
     processedRows,
     moveColumn,
-    exportToCSV,
+    exportToExcel,
   };
 }

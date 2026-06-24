@@ -27,7 +27,7 @@ function App() {
     visibleColumns,
     processedRows,
     toggleColumnVisibility,
-    exportToCSV,
+    exportToExcel,
   } = useTableData(data);
 
   const handleFileSelect = useCallback((file: File) => {
@@ -49,7 +49,7 @@ function App() {
         return (
           <div className="flex-1 overflow-y-auto bg-background">
             <div className="w-full max-w-[1600px] mx-auto">
-              <ReportPage data={data} onExport={exportToCSV} fileName={data.fileName} />
+              <ReportPage data={data} onExport={exportToExcel} fileName={data.fileName} />
             </div>
           </div>
         );
@@ -88,7 +88,7 @@ function App() {
                     visibleColumns={visibleColumns}
                     processedRows={processedRows}
                     onTogglePanel={() => setShowFieldPanel(prev => !prev)}
-                    onExport={exportToCSV}
+                    onExport={exportToExcel}
                     fileName={data.fileName}
                   />
 
