@@ -4,10 +4,11 @@ import { CloudUpload, FileSpreadsheet, AlertCircle, Loader2 } from 'lucide-react
 interface DropzoneProps {
   onFileSelect: (file: File) => void;
   isLoading: boolean;
+  statusText?: string;
   error: string | null;
 }
 
-export function Dropzone({ onFileSelect, isLoading, error }: DropzoneProps) {
+export function Dropzone({ onFileSelect, isLoading, statusText, error }: DropzoneProps) {
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleDragOver = useCallback((e: DragEvent) => {
@@ -67,7 +68,7 @@ export function Dropzone({ onFileSelect, isLoading, error }: DropzoneProps) {
         {isLoading ? (
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
-            <p className="text-sm font-medium text-orange-700">Parsing data...</p>
+            <p className="text-sm font-medium text-orange-700">{statusText || 'Parsing data...'}</p>
           </div>
         ) : (
           <>

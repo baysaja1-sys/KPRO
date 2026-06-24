@@ -12,7 +12,7 @@ import { useTableData } from '@/hooks/useTableData';
 import './App.css';
 
 function App() {
-  const { data, isLoading, error, parseFile, reset } = useExcelParser();
+  const { data, isLoading, statusText, error, parseFile, reset } = useExcelParser();
   const [showFieldPanel, setShowFieldPanel] = useState(false);
   const [activePage, setActivePage] = useState<Page>('dashboard');
 
@@ -124,6 +124,7 @@ function App() {
         <Dropzone
           onFileSelect={handleFileSelect}
           isLoading={isLoading}
+          statusText={statusText}
           error={error}
         />
       ) : renderPage()}
