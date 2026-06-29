@@ -7,6 +7,7 @@ import { FieldPanel } from '@/sections/FieldPanel';
 import { ReportPage } from '@/pages/ReportPage';
 import { MonitoringPage } from '@/pages/MonitoringPage';
 import { EvaluasiPage } from '@/pages/EvaluasiPage';
+import { Dashboard2Page } from '@/pages/Dashboard2Page';
 import { useExcelParser } from '@/hooks/useExcelParser';
 import { useTableData } from '@/hooks/useTableData';
 import './App.css';
@@ -45,6 +46,14 @@ function App() {
     if (!data) return null;
 
     switch (activePage) {
+      case 'dashboard2':
+        return (
+          <div className="flex-1 overflow-y-auto bg-background">
+            <div className="w-full max-w-[1800px] mx-auto">
+              <Dashboard2Page data={data} />
+            </div>
+          </div>
+        );
       case 'report':
         return (
           <div className="flex-1 overflow-y-auto bg-background">

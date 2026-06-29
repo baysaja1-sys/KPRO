@@ -1,6 +1,6 @@
-import { LayoutDashboard, FileBarChart2, Activity, ClipboardCheck, RotateCcw, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, FileBarChart2, Activity, ClipboardCheck, RotateCcw, ChevronRight, LayoutGrid } from 'lucide-react';
 
-export type Page = 'dashboard' | 'report' | 'monitoring' | 'evaluasi';
+export type Page = 'dashboard' | 'dashboard2' | 'report' | 'monitoring' | 'evaluasi';
 
 interface HeaderProps {
   onReset: () => void;
@@ -9,8 +9,9 @@ interface HeaderProps {
   onNavigate: (page: Page) => void;
 }
 
-const navItems: { id: Page; label: string; icon: React.ElementType }[] = [
+const navItems: { id: Page; label: string; icon: React.ElementType; badge?: string }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'dashboard2', label: 'Dashboard 2.0', icon: LayoutGrid, badge: 'NEW' },
   { id: 'report', label: 'Report', icon: FileBarChart2 },
   { id: 'monitoring', label: 'Monitoring', icon: Activity },
   { id: 'evaluasi', label: 'Evaluasi', icon: ClipboardCheck },
@@ -44,7 +45,7 @@ export function Header({ onReset, hasData, activePage, onNavigate }: HeaderProps
                 id={`nav-${item.id}`}
                 onClick={() => onNavigate(item.id)}
                 className={`
-                  flex items-center gap-2 h-9 px-3.5 text-[13px] font-medium rounded-xl transition-all duration-200
+                  relative flex items-center gap-2 h-9 px-3.5 text-[13px] font-medium rounded-xl transition-all duration-200
                   ${isActive
                     ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md shadow-orange-200'
                     : 'text-orange-700/70 hover:bg-orange-50 hover:text-orange-700'
@@ -53,6 +54,11 @@ export function Header({ onReset, hasData, activePage, onNavigate }: HeaderProps
               >
                 <Icon className="w-4 h-4" />
                 {item.label}
+                {item.badge && !isActive && (
+                  <span className="absolute -top-1.5 -right-1.5 text-[8px] font-black bg-gradient-to-r from-orange-500 to-red-500 text-white px-1.5 py-0.5 rounded-full leading-none shadow">
+                    {item.badge}
+                  </span>
+                )}
                 {isActive && <ChevronRight className="w-3 h-3 opacity-70" />}
               </button>
             );
