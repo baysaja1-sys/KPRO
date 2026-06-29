@@ -97,7 +97,6 @@ export function useDashboard2(data: ExcelData, selectedDate: string) {
     const idxStatus     = col(['STATUS']);
     const idxStatusDate = col(['STATUSDATE', 'STATUS_DATE', 'TGLPS', 'TGL_PS']);
     const idxChiefCode  = col(['CHIEF_CODE', 'CHIEFCODE', 'NIK', 'TEKNISI_ID']);
-    const idxRe         = col(['RE']);
 
     const today = new Date();
     const todayStr = toDateString(today);
@@ -119,7 +118,6 @@ export function useDashboard2(data: ExcelData, selectedDate: string) {
     const areaRows: AreaRow[] = Object.entries(areaMap).map(([area, areaData]) => {
       // ── ORDER PI (berdasarkan TGL_MANJA) ──────────────────────────
       let manjaExp = 0, manjaHi = 0, nonHPlus = 0;
-      const selectedMidnight = new Date(selectedDateStr + 'T00:00:00');
 
       areaData.forEach(row => {
         const tglManja = idxTglManja >= 0 ? parseFlexibleDate(row[idxTglManja]) : null;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { LayoutGrid, Calendar, RefreshCw, Edit3, Check, X, Download } from 'lucide-react';
 import { useDashboard2 } from '@/hooks/useDashboard2';
 import type { ExcelData } from '@/types';
